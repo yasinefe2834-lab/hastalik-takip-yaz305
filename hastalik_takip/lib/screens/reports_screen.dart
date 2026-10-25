@@ -342,7 +342,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: 1.85,
+          childAspectRatio: 1.5,
           children: [
             _metricTile(
               icon: Icons.coronavirus_outlined,

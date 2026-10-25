@@ -272,25 +272,101 @@ class _DiseasesScreenState extends State<DiseasesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Uygulama içi düşük boyutlu banner görseli
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        Image.asset(
-                          'assets/images/app_banner.png',
-                          width: double.infinity,
-                          height: 135,
-                          fit: BoxFit.cover,
+                  // Vektörel ve net Medikal Başlık & Hızlı Erişim Kartı (Kırpılma ve bulanıklık olmadan)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF0F766E), Color(0xFF0D9488)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.teal.withValues(alpha: 0.22),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: FilledButton.tonalIcon(
-                            onPressed: widget.onOpenOcrRequested,
-                            icon: const Icon(Icons.document_scanner, size: 18),
-                            label: const Text('OCR ile Belge Tara'),
-                          ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.medical_information_outlined,
+                                color: Colors.white,
+                                size: 26,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Kişisel Sağlık & Hastalık Takip Sistemi',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Verileriniz cihaz içi yerel veritabanında güvende tutulur.',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Aktif Tanı: ${widget.db.diseases.where((d) => d.status.contains("Aktif")).length} • '
+                              'Gelecek Randevu: ${widget.db.upcomingVisits.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF0F766E),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: widget.onOpenOcrRequested,
+                              icon: const Icon(
+                                Icons.document_scanner,
+                                size: 16,
+                              ),
+                              label: const Text(
+                                'OCR ile Belge Tara',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
