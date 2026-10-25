@@ -107,21 +107,34 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                       minHeight: 9,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       TextButton.icon(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          visualDensity: VisualDensity.compact,
+                        ),
                         onPressed: widget.onOpenOcrRequested,
-                        icon: const Icon(Icons.document_scanner, size: 18),
-                        label: const Text('OCR ile Prospektüs Tara'),
+                        icon: const Icon(Icons.document_scanner, size: 17),
+                        label: const Text(
+                          'OCR ile Prospektüs Tara',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                       Text(
                         takenCount == meds.length && meds.isNotEmpty
                             ? 'Tüm günlük dozlar tamamlandı!'
-                            : 'Bekleyen dozlarınızı işaretleyin',
+                            : 'Bekleyen dozları işaretleyin',
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

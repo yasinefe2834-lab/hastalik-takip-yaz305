@@ -438,11 +438,14 @@ class _OcrScannerScreenState extends State<OcrScannerScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Tanıtım & Sağlık Rehberi Videosu (Düşük Boyutlu MP4)',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11.5,
+                              const Expanded(
+                                child: Text(
+                                  'Tanıtım & Sağlık Rehberi Videosu (MP4)',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11.5,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               Row(

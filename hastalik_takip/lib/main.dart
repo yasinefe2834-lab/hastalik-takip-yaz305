@@ -17,6 +17,8 @@ Future<void> main() async {
 }
 
 /// YAZ305 Mobil Yazılım Geliştirme - Proje 11: Hastalık Takip Uygulaması.
+/// Geniş ekranlarda MaterialApp'i telefon çerçevesinin içinde çalıştırarak tüm
+/// pop-up, alt pencere (BottomSheet) ve diyalogların telefon ekranı içinde kalmasını sağlar.
 class HastalikTakipApp extends StatefulWidget {
   const HastalikTakipApp({super.key});
 
@@ -26,6 +28,7 @@ class HastalikTakipApp extends StatefulWidget {
 
 class _HastalikTakipAppState extends State<HastalikTakipApp> {
   final DatabaseService _db = DatabaseService.instance;
+  bool _usePhoneFrameOnWideScreen = true;
 
   @override
   void initState() {
@@ -45,8 +48,10 @@ class _HastalikTakipAppState extends State<HastalikTakipApp> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+  /// İç MaterialApp yapısını oluşturur.
+  /// Bu yapı telefon çerçevesinin içine yerleştirildiği için tüm pop-up,
+  /// BottomSheet ve Navigator geçişleri telefon çerçevesinin dışına taşmaz.
+  Widget _buildInnerMaterialApp({required bool isWide}) {
     const colorSeed = Color(0xFF0D9488); // Medikal Turkuaz / Zümrüt Yeşili
 
     return MaterialApp(
@@ -71,17 +76,154 @@ class _HastalikTakipAppState extends State<HastalikTakipApp> {
           brightness: Brightness.dark,
         ),
       ),
-      home: MainShellScreen(db: _db),
+      home: MainShellScreen(
+        db: _db,
+        isWideScreen: isWide,
+        usePhoneFrame: _usePhoneFrameOnWideScreen,
+        onTogglePhoneFrame: () {
+          setState(() {
+            _usePhoneFrameOnWideScreen = !_usePhoneFrameOnWideScreen;
+          });
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 620;
+          if (!isWide || !_usePhoneFrameOnWideScreen) {
+            return _buildInnerMaterialApp(isWide: isWide);
+          }
+
+          final isDark = _db.isDarkMode;
+          final outerBg =
+              isDark ? const Color(0xFF0F172A) : const Color(0xFFCBD5E1);
+          final statusBg =
+              isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+          final statusFg = isDark ? Colors.white : const Color(0xFF0F172A);
+
+          return ColoredBox(
+            color: outerBg,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 12,
+                ),
+                child: Container(
+                  width: 430,
+                  height: 890,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(42),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        blurRadius: 28,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: const Color(0xFF334155),
+                      width: 8,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(34),
+                    child: Column(
+                      children: [
+                        // Telefon Üst Durum Çubuğu (Saat, Kamera Çentiği ve Batarya)
+                        Container(
+                          height: 28,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          color: statusBg,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '09:41',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: statusFg,
+                                  decoration: TextDecoration.none,
+                                ),
+                              ),
+                              Container(
+                                width: 76,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  color: Colors.black87,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.signal_cellular_alt,
+                                    size: 13,
+                                    color: statusFg,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.wifi,
+                                    size: 13,
+                                    color: statusFg,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.battery_full,
+                                    size: 14,
+                                    color: statusFg,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        // MaterialApp doğrudan telefon ekranının içinde yer alır
+                        Expanded(
+                          child: MediaQuery(
+                            data: MediaQuery.of(context).copyWith(
+                              size: const Size(414, 846),
+                              padding: EdgeInsets.zero,
+                            ),
+                            child: _buildInnerMaterialApp(isWide: true),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-/// Alt navigasyon çubuğu, sayfa geçiş animasyonları, telefon çerçevesi önizleme modu
-/// ve PIN gizlilik kilidini barındıran ana çerçeve ekranı.
+/// Alt navigasyon çubuğu, sayfa geçiş animasyonları ve PIN gizlilik kilidini
+/// barındıran ana çerçeve ekranı.
 class MainShellScreen extends StatefulWidget {
   final DatabaseService db;
+  final bool isWideScreen;
+  final bool usePhoneFrame;
+  final VoidCallback onTogglePhoneFrame;
 
-  const MainShellScreen({super.key, required this.db});
+  const MainShellScreen({
+    super.key,
+    required this.db,
+    required this.isWideScreen,
+    required this.usePhoneFrame,
+    required this.onTogglePhoneFrame,
+  });
 
   @override
   State<MainShellScreen> createState() => _MainShellScreenState();
@@ -90,7 +232,6 @@ class MainShellScreen extends StatefulWidget {
 class _MainShellScreenState extends State<MainShellScreen> {
   int _selectedIndex = 0;
   bool _isUnlocked = false;
-  bool _usePhoneFrameOnWideScreen = true;
   final TextEditingController _pinInputCtrl = TextEditingController();
   String? _pinError;
 
@@ -121,7 +262,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
               Expanded(
                 child: Text(
                   'YAZ305 Proje 11: Hastalık Takip',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -135,12 +276,12 @@ class _MainShellScreenState extends State<MainShellScreen> {
                   'Hazırlayanlar: Kayra Oruçoğlu, Yasin Efe Güvenç\n'
                   'Danışman: Şerife Esra Dinçer\n'
                   'Kurum: T.C. İstanbul Gedik Üniversitesi',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
                 ),
-                Divider(height: 20),
+                Divider(height: 18),
                 Text(
                   'Uygulanan Sınav Değerlendirme Kriterleri:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
                 ),
                 SizedBox(height: 6),
                 Text(
@@ -149,7 +290,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
                   '• Ses, Görüntü ve Video (10p): Düşük boyutlu WAV sesli bildirimler, PNG tıbbi kartlar ve MP4 tanıtım/rehber videosu.\n'
                   '• Sayfalar Arası Uyumlu Geçişler (10p): AnimatedSwitcher, PageRouteBuilder (Slide + Fade) ve alt sekme geçişleri.\n'
                   '• Proje 11 Modülleri (10p): Hastalık girişi, Doktor ziyaret notları, İlaç bilgileri, Gelecek doktor ziyaretlerinin takibi ve Genel raporlama.',
-                  style: TextStyle(fontSize: 12, height: 1.4),
+                  style: TextStyle(fontSize: 11.5, height: 1.4),
                 ),
               ],
             ),
@@ -242,8 +383,12 @@ class _MainShellScreenState extends State<MainShellScreen> {
     );
   }
 
-  /// Uygulamanın ana Scaffold içeriğini oluşturur.
-  Widget _buildCoreAppScaffold(BuildContext context, {required bool isWide}) {
+  @override
+  Widget build(BuildContext context) {
+    if (widget.db.isPinLockEnabled && !_isUnlocked) {
+      return _buildPinLockScreen();
+    }
+
     final pages = <Widget>[
       DiseasesScreen(
         key: const ValueKey('page_diseases'),
@@ -274,7 +419,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
       appBar: AppBar(
         leading: const Padding(
           padding: EdgeInsets.only(left: 12),
-          child: Icon(Icons.health_and_safety, color: Colors.teal, size: 26),
+          child: Icon(Icons.health_and_safety, color: Colors.teal, size: 25),
         ),
         titleSpacing: 4,
         title: Column(
@@ -282,7 +427,10 @@ class _MainShellScreenState extends State<MainShellScreen> {
           children: [
             Text(
               _pageTitles[_selectedIndex],
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.bold,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
             Text(
@@ -295,23 +443,20 @@ class _MainShellScreenState extends State<MainShellScreen> {
           ],
         ),
         actions: [
-          if (isWide)
+          if (widget.isWideScreen)
             IconButton(
-              tooltip: _usePhoneFrameOnWideScreen
+              visualDensity: VisualDensity.compact,
+              tooltip: widget.usePhoneFrame
                   ? 'Tam Ekran Görünümüne Geç'
                   : 'Mobil Telefon Görünümüne Geç',
-              onPressed: () {
-                setState(() {
-                  _usePhoneFrameOnWideScreen = !_usePhoneFrameOnWideScreen;
-                });
-              },
+              onPressed: widget.onTogglePhoneFrame,
               icon: Icon(
-                _usePhoneFrameOnWideScreen
-                    ? Icons.fullscreen
-                    : Icons.smartphone,
+                widget.usePhoneFrame ? Icons.fullscreen : Icons.smartphone,
+                size: 20,
               ),
             ),
           IconButton(
+            visualDensity: VisualDensity.compact,
             tooltip:
                 MediaService.instance.soundEnabled ? 'Sesi Kapat' : 'Sesi Aç',
             onPressed: () {
@@ -324,23 +469,25 @@ class _MainShellScreenState extends State<MainShellScreen> {
               MediaService.instance.soundEnabled
                   ? Icons.volume_up_outlined
                   : Icons.volume_off_outlined,
-              size: 21,
+              size: 20,
             ),
           ),
           IconButton(
+            visualDensity: VisualDensity.compact,
             tooltip: widget.db.isDarkMode ? 'Aydınlık Mod' : 'Karanlık Mod',
             onPressed: () => widget.db.toggleDarkMode(!widget.db.isDarkMode),
             icon: Icon(
               widget.db.isDarkMode
                   ? Icons.light_mode_outlined
                   : Icons.dark_mode_outlined,
-              size: 21,
+              size: 20,
             ),
           ),
           IconButton(
+            visualDensity: VisualDensity.compact,
             tooltip: 'Proje Bilgisi ve Kriterler',
             onPressed: _showProjectAboutDialog,
-            icon: const Icon(Icons.info_outline, size: 21),
+            icon: const Icon(Icons.info_outline, size: 20),
           ),
         ],
       ),
@@ -392,114 +539,6 @@ class _MainShellScreenState extends State<MainShellScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.db.isPinLockEnabled && !_isUnlocked) {
-      return _buildPinLockScreen();
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 620;
-        if (!isWide || !_usePhoneFrameOnWideScreen) {
-          return _buildCoreAppScaffold(context, isWide: isWide);
-        }
-
-        // Geniş masaüstü/tarayıcı ekranlarında gerçekçi Mobil Telefon Çerçevesi görünümü
-        return Scaffold(
-          backgroundColor: widget.db.isDarkMode
-              ? const Color(0xFF0F172A)
-              : const Color(0xFFE2E8F0),
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-              child: Container(
-                width: 430,
-                height: 890,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(42),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.32),
-                      blurRadius: 28,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: const Color(0xFF334155),
-                    width: 8,
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(34),
-                  child: Column(
-                    children: [
-                      // Telefon Üst Durum Çubuğu (Saat, 5G ve Batarya Göstergesi)
-                      Container(
-                        height: 28,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        color: Theme.of(context).colorScheme.surface,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '09:41',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                            Container(
-                              width: 76,
-                              height: 14,
-                              decoration: BoxDecoration(
-                                color: Colors.black87,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.signal_cellular_alt,
-                                  size: 13,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.wifi,
-                                  size: 13,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.battery_full,
-                                  size: 14,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildCoreAppScaffold(context, isWide: true),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

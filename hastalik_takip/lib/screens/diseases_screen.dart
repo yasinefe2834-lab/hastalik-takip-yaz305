@@ -338,15 +338,19 @@ class _DiseasesScreenState extends State<DiseasesScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Aktif Tanı: ${widget.db.diseases.where((d) => d.status.contains("Aktif")).length} • '
-                              'Gelecek Randevu: ${widget.db.upcomingVisits.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                            Expanded(
+                              child: Text(
+                                'Aktif Tanı: ${widget.db.diseases.where((d) => d.status.contains("Aktif")).length} • '
+                                'Randevu: ${widget.db.upcomingVisits.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            const SizedBox(width: 8),
                             FilledButton.tonalIcon(
                               style: FilledButton.styleFrom(
                                 backgroundColor: Colors.white,
